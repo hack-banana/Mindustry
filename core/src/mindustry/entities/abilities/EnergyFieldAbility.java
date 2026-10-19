@@ -10,6 +10,7 @@ import arc.struct.*;
 import arc.util.*;
 import mindustry.content.*;
 import mindustry.entities.*;
+import mindustry.game.EventType.UnitBulletDestroyEvent;
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
@@ -19,6 +20,13 @@ import mindustry.world.meta.*;
 import static mindustry.Vars.*;
 
 public class EnergyFieldAbility extends Ability{
+    private static final Bullet bullet = Bullet.create();
+    private static final UnitBulletDestroyEvent event = new UnitBulletDestroyEvent(null, bullet);
+
+    static {
+        bullet.type = Bullets.damageLightning;
+    }
+
     private static final Seq<Healthc> all = new Seq<>();
 
     public float damage = 1, reload = 100, range = 60;
@@ -174,6 +182,11 @@ public class EnergyFieldAbility extends Ability{
                         b.damage(unit.team, scaledDamage);
                     }else{
                         other.damage(scaledDamage);
+                        if(other instanceof Unit u && u.dead()){
+                            event.unit = u;
+                            bullet.owner = unit;
+                            Events.fire(event);
+                        }
                     }
                     if(other instanceof Statusc s){
                         s.apply(status, statusDuration);
